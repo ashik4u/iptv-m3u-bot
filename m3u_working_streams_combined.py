@@ -11,6 +11,16 @@ def load_m3u_urls(feed_file="feed.txt"):
         print(f"Error reading {feed_file}: {ex}")
         return []
 
+def extract_channel_name(extinf_line):
+    """Extract channel name from EXTINF line."""
+    if not extinf_line:
+        return ""
+    # Extract text after the last comma
+    parts = extinf_line.split(',', 1)
+    if len(parts) > 1:
+        return parts[1].strip()
+    return ""
+
 def fetch_m3u_links(m3u_url):
     try:
         resp = requests.get(m3u_url, timeout=15)
@@ -79,21 +89,25 @@ if __name__ == "__main__":
     for extinf, url in combined_entries:
         if url not in seen_urls:
             seen_urls.add(url)
-            unique_entries.append((extinf, url))
+            channel_name = extract_channel_name(extinf) or url
+            unique_entries.append((extinf, url, channel_name))
     
-    # Sort entries by URL in ascending order
-    unique_entries.sort(key=lambda x: x[1].lower())
+    # Sort entries alphabetically by channel name
+    unique_entries.sort(key=lambda x: x[2].lower())
     
     print(f"\nTotal unique working streams: {len(unique_entries)} (removed {len(combined_entries) - len(unique_entries)} duplicates)")
 
-    # Combine and write to output M3U
+    # Combine and write to output M3U with single group
     output_file = "combined_working_streams.m3u"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
-        for extinf, url in unique_entries:
+        for extinf, url, channel_name in unique_entries:
             if extinf:
+                # Add group-title to existing EXTINF line
+                if 'group-title=' not in extinf:
+                    extinf = extinf.replace('#EXTINF:', '#EXTINF:').replace(',', ' group-title="All Channels",', 1)
                 f.write(f"{extinf}\n")
             else:
-                f.write(f"#EXTINF:-1,{url}\n")
+                f.write(f'#EXTINF:-1 group-title="All Channels",{channel_name}\n')
             f.write(f"{url}\n")
     print(f"Combined working streams saved to {output_file}")
