@@ -1,5 +1,7 @@
 # IPTV Working Streams Combined M3U Bot
 
+[![Check and Combine M3U Streams](https://github.com/musfiqeee/iptv-m3u-bot/actions/workflows/check-and-combine.yml/badge.svg)](https://github.com/musfiqeee/iptv-m3u-bot/actions/workflows/check-and-combine.yml)
+
 This bot fetches multiple IPTV M3U playlists, checks each video stream for availability, and combines all working streams into a single `.m3u` file.
 
 ## Features
