@@ -1,12 +1,15 @@
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-M3U_URLS = [
-    "https://raw.githubusercontent.com/doms9/iptv/refs/heads/default/M3U8/events.m3u8",
-    "https://raw.githubusercontent.com/IPTVFlixBD/Fancode-BD/refs/heads/main/playlist.m3u",
-    "https://raw.githubusercontent.com/abusaeeidx/Mrgify-BDIX-IPTV/main/playlist.m3u",
-    "https://raw.githubusercontent.com/a1xmedia/m3u/refs/heads/main/a1x.m3u"
-]
+def load_m3u_urls(feed_file="feed.txt"):
+    """Load M3U URLs from feed.txt file."""
+    try:
+        with open(feed_file, "r", encoding="utf-8") as f:
+            urls = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+        return urls
+    except Exception as ex:
+        print(f"Error reading {feed_file}: {ex}")
+        return []
 
 def fetch_m3u_links(m3u_url):
     """Download and parse M3U file, returning streaming links."""
@@ -50,6 +53,11 @@ def check_streams(links):
     return working
 
 if __name__ == "__main__":
+    M3U_URLS = load_m3u_urls()
+    if not M3U_URLS:
+        print("No URLs found in feed.txt")
+        exit(1)
+    
     for m3u_url in M3U_URLS:
         links = fetch_m3u_links(m3u_url)
         if not links:
