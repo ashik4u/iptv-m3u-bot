@@ -73,14 +73,27 @@ if __name__ == "__main__":
         print(f"  {len(working)} working links found.")
         combined_entries.extend(working)
 
+    # Remove duplicates based on URL
+    seen_urls = set()
+    unique_entries = []
+    for extinf, url in combined_entries:
+        if url not in seen_urls:
+            seen_urls.add(url)
+            unique_entries.append((extinf, url))
+    
+    # Sort entries by URL in ascending order
+    unique_entries.sort(key=lambda x: x[1].lower())
+    
+    print(f"\nTotal unique working streams: {len(unique_entries)} (removed {len(combined_entries) - len(unique_entries)} duplicates)")
+
     # Combine and write to output M3U
     output_file = "combined_working_streams.m3u"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
-        for extinf, url in combined_entries:
+        for extinf, url in unique_entries:
             if extinf:
                 f.write(f"{extinf}\n")
             else:
                 f.write(f"#EXTINF:-1,{url}\n")
             f.write(f"{url}\n")
-    print(f"\nCombined working streams saved to {output_file} ({len(combined_entries)} links).")
+    print(f"Combined working streams saved to {output_file}")
