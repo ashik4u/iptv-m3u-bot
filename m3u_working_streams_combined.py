@@ -11,6 +11,41 @@ def load_m3u_urls(feed_file="feed.txt"):
         print(f"Error reading {feed_file}: {ex}")
         return []
 
+def load_custom_entries(custom_file="custom_entries.txt"):
+    """Load custom M3U entries from custom_entries.txt file."""
+    try:
+        with open(custom_file, "r", encoding="utf-8") as f:
+            lines = [line.rstrip() for line in f]
+        
+        entries = []
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            # Skip empty lines and comments
+            if not line or line.startswith("#"):
+                i += 1
+                continue
+            # If line starts with #EXTINF, it's the start of an entry
+            if line.startswith("#EXTINF"):
+                extinf = line
+                # Next non-empty line should be the URL
+                i += 1
+                while i < len(lines) and not lines[i].strip():
+                    i += 1
+                if i < len(lines):
+                    url = lines[i].strip()
+                    if url and not url.startswith("#"):
+                        channel_name = extract_channel_name(extinf) or url
+                        entries.append((extinf, url, channel_name))
+            i += 1
+        return entries
+    except FileNotFoundError:
+        print(f"No custom entries file found. Skipping.")
+        return []
+    except Exception as ex:
+        print(f"Error reading {custom_file}: {ex}")
+        return []
+
 def extract_channel_name(extinf_line):
     """Extract channel name from EXTINF line."""
     if not extinf_line:
@@ -66,6 +101,11 @@ def check_streams(entries):
     return working_entries
 
 if __name__ == "__main__":
+    # Load custom entries first (not checked for availability)
+    print("Loading custom entries...")
+    custom_entries = load_custom_entries()
+    print(f"  {len(custom_entries)} custom entries loaded.\n")
+    
     M3U_URLS = load_m3u_urls()
     if not M3U_URLS:
         print("No URLs found in feed.txt")
@@ -101,6 +141,19 @@ if __name__ == "__main__":
     output_file = "combined_working_streams.m3u"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n")
+        
+        # Write custom entries first
+        for extinf, url, channel_name in custom_entries:
+            if extinf:
+                # Add group-title if not present
+                if 'group-title=' not in extinf:
+                    extinf = extinf.replace('#EXTINF:', '#EXTINF:').replace(',', ' group-title="All Channels",', 1)
+                f.write(f"{extinf}\n")
+            else:
+                f.write(f'#EXTINF:-1 group-title="All Channels",{channel_name}\n')
+            f.write(f"{url}\n")
+        
+        # Write checked entries
         for extinf, url, channel_name in unique_entries:
             if extinf:
                 # Add group-title to existing EXTINF line
@@ -110,4 +163,5 @@ if __name__ == "__main__":
             else:
                 f.write(f'#EXTINF:-1 group-title="All Channels",{channel_name}\n')
             f.write(f"{url}\n")
-    print(f"Combined working streams saved to {output_file}")
+    
+    print(f"Combined working streams saved to {output_file} ({len(custom_entries)} custom + {len(unique_entries)} checked)")
