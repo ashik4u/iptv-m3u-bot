@@ -20,6 +20,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Create data files from secrets
+        run: |
+          mkdir -p data
+          echo "${{ secrets.FEED_TXT }}" > data/feed.txt
+          echo "${{ secrets.CUSTOM_ENTRIES_TXT }}" > data/custom_entries.txt
+
       - name: Run script
         run: python scripts/m3u_working_streams_combined.py
 
