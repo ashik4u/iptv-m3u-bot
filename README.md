@@ -8,7 +8,7 @@ This bot fetches multiple IPTV M3U playlists, checks each video stream for avail
 
 Click to copy:
 ```
-https://raw.githubusercontent.com/musfiqeee/iptv-m3u-bot/main/output/all.m3u
+https://raw.githubusercontent.com/ashik4u/iptv-m3u-bot/refs/heads/main/output/all.m3u
 ```
 
 ## Features
